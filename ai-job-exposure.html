@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Will AI Take Your Job? | AI Exposure Score Tool | employmentBENEFITS</title>
+<meta name="description" content="Search your occupation and see your AI exposure score. Find out how artificial intelligence will reshape your role. Free tool from employmentBENEFITS, Australian HR consultancy.">
+<meta name="keywords" content="AI job risk, will AI replace my job, AI exposure score, AI impact jobs Australia, artificial intelligence employment, AI automation risk, HR AI governance">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --eb-navy:#1A2332;--eb-navy-dark:#0D1520;--eb-teal:#00B8D4;--eb-teal-hover:#00A0BC;
+  --eb-cyan:#1DE9B6;--eb-charcoal:#3A3A3A;--eb-light:#F5F5F5;--eb-off-white:#F4F8FA;
+  --eb-border:#E0E0E0;--eb-teal-light:#E0F7FA;
+  --font-h:'Montserrat',Arial,sans-serif;--font-b:'Inter','Open Sans',Arial,sans-serif;
+}
+body{font-family:var(--font-b);color:var(--eb-charcoal);background:#fff;margin:0;-webkit-font-smoothing:antialiased}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,var(--eb-navy) 0%,var(--eb-navy-dark) 100%);color:#fff;padding:64px 24px 56px;text-align:center;position:relative;overflow:hidden}
+.hero-overlay{position:absolute;top:0;left:0;width:100%;height:100%;opacity:.05;pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:780px;margin:0 auto}
+.hero-badge{display:inline-block;background:rgba(0,184,212,.14);border:1px solid var(--eb-teal);border-radius:20px;padding:5px 16px;font-size:11px;font-family:var(--font-h);font-weight:600;color:var(--eb-teal);letter-spacing:1.2px;margin-bottom:20px}
+.hero h1{font-family:var(--font-h);font-weight:800;font-size:clamp(30px,5vw,52px);line-height:1.08;margin:0 0 14px}
+.hero h1 .accent{color:var(--eb-teal)}
+.hero .sub{font-size:clamp(15px,2vw,19px);color:rgba(255,255,255,.65);max-width:560px;margin:0 auto 32px;line-height:1.55}
+
+/* Search */
+.search-wrap{max-width:500px;margin:0 auto;position:relative}
+.search-box{display:flex;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);border-radius:8px;overflow:hidden;transition:border-color .2s}
+.search-box.active{border-color:var(--eb-teal)}
+.search-box input{flex:1;padding:15px 18px;background:transparent;border:none;color:#fff;font-size:15px;font-family:var(--font-b);outline:none}
+.search-box input::placeholder{color:rgba(255,255,255,.4)}
+.search-box button{background:var(--eb-teal);border:none;padding:0 22px;color:#fff;font-family:var(--font-h);font-weight:700;font-size:13px;cursor:pointer;transition:background .15s}
+.search-box button:hover{background:var(--eb-teal-hover)}
+.hero .fine{font-size:11px;color:rgba(255,255,255,.32);margin-top:14px;line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto}
+
+/* Dropdown */
+.dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.3);max-height:340px;overflow-y:auto;z-index:100;border:1px solid var(--eb-teal);display:none}
+.dropdown.open{display:block}
+.dropdown-item{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 16px;border:none;border-bottom:1px solid #f0f0f0;background:#fff;cursor:pointer;text-align:left;font-family:var(--font-b);font-size:14px;color:var(--eb-charcoal);transition:background .12s}
+.dropdown-item:hover{background:var(--eb-off-white)}
+.dropdown-item .name{font-weight:600;color:var(--eb-navy)}
+.dropdown-item .cat{font-size:11px;color:#999;margin-top:2px}
+.dropdown-item .score{font-weight:800;font-size:15px;font-family:var(--font-h);display:flex;align-items:center;gap:6px}
+.dropdown-item .dot{width:10px;height:10px;border-radius:50%}
+
+/* Result card */
+.result-section{background:var(--eb-off-white);padding:44px 24px;display:none}
+.result-section.visible{display:block}
+.result-card{max-width:700px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08);border:1px solid var(--eb-border)}
+.result-header{background:var(--eb-navy);color:#fff;padding:26px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.result-header .label{font-size:11px;color:rgba(255,255,255,.45);font-family:var(--font-h);font-weight:600;letter-spacing:1px;margin-bottom:3px}
+.result-header h2{font-family:var(--font-h);font-weight:700;font-size:24px;margin:0}
+.result-header .rcat{font-size:12px;color:rgba(255,255,255,.55);margin-top:3px}
+.result-score{text-align:center;flex-shrink:0}
+.result-score .big{font-size:44px;font-weight:800;font-family:var(--font-h);line-height:1}
+.result-score .of{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px}
+.result-bar-wrap{padding:0 28px;margin-top:-1px}
+.result-bar{height:7px;border-radius:4px;background:#e0e0e0;overflow:hidden}
+.result-bar-fill{height:100%;border-radius:4px;transition:width .8s ease-out}
+.result-grid{padding:22px 28px 26px;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+.result-grid .rl{font-size:10px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.result-grid .rv{font-size:15px;font-weight:600;color:var(--eb-navy);margin-top:2px}
+.result-rationale{margin:0 28px 26px;padding:16px 20px;border-left:4px solid var(--eb-teal);background:var(--eb-teal-light);border-radius:0 6px 6px 0;font-size:13.5px;line-height:1.7;color:var(--eb-charcoal)}
+.result-rationale .rlabel{font-size:10px;font-weight:700;color:var(--eb-teal);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.result-actions{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap;max-width:700px;margin-left:auto;margin-right:auto}
+.btn-outline{padding:9px 22px;border-radius:6px;border:2px solid var(--eb-navy);background:transparent;color:var(--eb-navy);font-family:var(--font-h);font-weight:600;font-size:13px;cursor:pointer;transition:background .15s}
+.btn-outline:hover{background:var(--eb-light)}
+.btn-teal{padding:9px 22px;border-radius:6px;border:none;background:var(--eb-teal);color:#fff;font-family:var(--font-h);font-weight:700;font-size:13px;cursor:pointer;transition:background .15s}
+.btn-teal:hover{background:var(--eb-teal-hover)}
+
+/* Stats strip */
+.stats-strip{background:var(--eb-navy);padding:32px 24px}
+.stats-grid{max-width:880px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:20px;text-align:center}
+.stats-grid .snum{font-family:var(--font-h);font-weight:800}
+.stats-grid .slabel{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px}
+
+/* Treemap section */
+.map-section{background:var(--eb-off-white);padding:40px 24px 48px}
+.map-header{max-width:1100px;margin:0 auto 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.map-header h2{font-family:var(--font-h);font-weight:700;font-size:20px;color:var(--eb-navy);margin:0}
+.map-header .minfo{font-size:12px;color:#999;margin-top:3px}
+.map-pills{max-width:1100px;margin:0 auto 10px;display:flex;flex-wrap:wrap;gap:5px}
+.pill{padding:4px 12px;border-radius:4px;font-size:11px;font-family:var(--font-h);font-weight:600;cursor:pointer;border:1px solid #ccc;background:#fff;color:var(--eb-charcoal);transition:all .15s}
+.pill:hover{border-color:#aaa}
+.pill.active{border-color:var(--eb-teal);background:var(--eb-teal);color:#fff}
+.map-container{max-width:1100px;margin:0 auto;position:relative}
+#treemap-svg{display:block;border-radius:8px;overflow:hidden}
+
+/* Treemap tooltip */
+.tt{position:absolute;background:rgba(26,35,50,.97);border:1px solid var(--eb-teal);border-radius:8px;padding:14px 18px;max-width:310px;pointer-events:none;z-index:100;box-shadow:0 8px 28px rgba(0,0,0,.4);color:#fff;font-size:12px;display:none}
+.tt.open{display:block}
+.tt .tt-title{font-size:13px;font-weight:700;font-family:var(--font-h);margin-bottom:3px}
+.tt .tt-cat{font-size:10px;color:rgba(255,255,255,.5);margin-bottom:8px}
+.tt .tt-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px}
+.tt .tt-grid .tl{color:rgba(255,255,255,.5)}
+.tt .tt-grid .tv{font-weight:600}
+.tt .tt-rat{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(255,255,255,.55);font-style:italic;line-height:1.5}
+
+.legend{max-width:1100px;margin:10px auto 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.legend .lt{font-size:11px;font-weight:600;color:var(--eb-charcoal)}
+.legend .lr{font-size:10px;color:#999}
+.legend .grad{width:170px;height:10px;border-radius:5px;background:linear-gradient(to right,#2d8a4e,#5cb85c,#f0ad4e,#e8733a,#c9302c)}
+
+/* Meaning section */
+.meaning{background:#fff;padding:52px 24px}
+.meaning-inner{max-width:780px;margin:0 auto}
+.meaning h2{font-family:var(--font-h);font-weight:700;font-size:22px;color:var(--eb-navy);margin-bottom:8px}
+.meaning .mp{font-size:14.5px;line-height:1.75;color:var(--eb-charcoal);margin-bottom:22px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.card-grid .card{background:var(--eb-off-white);border-left:4px solid var(--eb-teal);border-radius:0 8px 8px 0;padding:20px 22px}
+.card-grid .card h3{font-family:var(--font-h);font-weight:700;font-size:13px;color:var(--eb-navy);margin:0 0 6px}
+.card-grid .card p{font-size:12.5px;line-height:1.65;color:var(--eb-charcoal);margin:0}
+
+/* CTA */
+.cta{background:linear-gradient(135deg,var(--eb-navy) 0%,var(--eb-navy-dark) 100%);padding:52px 24px;text-align:center;color:#fff}
+.cta-inner{max-width:680px;margin:0 auto}
+.cta h2{font-family:var(--font-h);font-weight:700;font-size:24px;margin:0 0 10px}
+.cta h2 .accent{color:var(--eb-teal)}
+.cta .cp{font-size:14.5px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:28px}
+.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.cta-btns a{display:inline-block;padding:13px 28px;border-radius:6px;text-decoration:none;font-family:var(--font-h);font-weight:700;font-size:14px;transition:all .15s}
+.cta-btns .primary{background:var(--eb-teal);color:#fff}.cta-btns .primary:hover{background:var(--eb-teal-hover)}
+.cta-btns .ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.25)}.cta-btns .ghost:hover{border-color:rgba(255,255,255,.5)}
+.cta .caveat{font-size:10px;color:rgba(255,255,255,.25);margin-top:22px;line-height:1.6}
+
+/* Footer */
+.eb-footer{background:var(--eb-navy-dark);padding:24px;text-align:center;font-size:11px;color:rgba(255,255,255,.3);line-height:1.6}
+.eb-footer .fbrand{font-family:var(--font-h);font-weight:600;color:rgba(255,255,255,.45)}
+.eb-footer .fbrand span{font-weight:400}
+
+@media(max-width:640px){
+  .result-header{flex-direction:column;text-align:center}
+  .result-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <svg class="hero-overlay" viewBox="0 0 800 400" preserveAspectRatio="none">
+    <circle cx="650" cy="200" r="180" stroke="#00B8D4" fill="none" stroke-width="1"/>
+    <circle cx="650" cy="200" r="130" stroke="#00B8D4" fill="none" stroke-width=".5"/>
+    <circle cx="650" cy="200" r="80" stroke="#1DE9B6" fill="none" stroke-width=".5"/>
+    <line x1="0" y1="200" x2="470" y2="200" stroke="#00B8D4" stroke-width=".5"/>
+    <line x1="200" y1="0" x2="200" y2="400" stroke="#00B8D4" stroke-width=".3"/>
+    <line x1="400" y1="0" x2="400" y2="400" stroke="#00B8D4" stroke-width=".3"/>
+    <line x1="50" y1="100" x2="750" y2="100" stroke="#00B8D4" stroke-width=".2"/>
+    <line x1="50" y1="300" x2="750" y2="300" stroke="#00B8D4" stroke-width=".2"/>
+  </svg>
+  <div class="hero-inner">
+    <div class="hero-badge">AI WORKFORCE IMPACT TOOL</div>
+    <h1>Will AI <span class="accent">Take Your Job?</span></h1>
+    <p class="sub">Search your occupation. See your AI exposure score.<br>Find out where you really stand.</p>
+    <div class="search-wrap">
+      <div class="search-box" id="searchBox">
+        <input type="text" id="searchInput" placeholder="Type your job title... e.g. Accountant, Nurse, Developer" autocomplete="off">
+        <button type="button">Search</button>
+      </div>
+      <div class="dropdown" id="dropdown"></div>
+    </div>
+    <p class="fine">Covering <span id="occCount"></span> occupations across the economy. Not every role is listed individually. Some similar occupations have been grouped together. Scores are indicative estimates generated by AI analysis of occupational data and are subject to change as AI capabilities evolve. This tool is for general guidance only and should not be relied upon as a definitive prediction.</p>
+  </div>
+</section>
+
+<!-- RESULT CARD -->
+<section class="result-section" id="resultSection">
+  <div class="result-card">
+    <div class="result-header">
+      <div>
+        <div class="label">AI EXPOSURE SCORE</div>
+        <h2 id="rTitle"></h2>
+        <div class="rcat" id="rCat"></div>
+      </div>
+      <div class="result-score">
+        <div class="big" id="rScore"></div>
+        <div class="of">out of 10</div>
+      </div>
+    </div>
+    <div class="result-bar-wrap"><div class="result-bar"><div class="result-bar-fill" id="rBar"></div></div></div>
+    <div class="result-grid">
+      <div><div class="rl">Risk Level</div><div class="rv" id="rLevel"></div></div>
+      <div><div class="rl">Job Outlook</div><div class="rv" id="rOutlook"></div></div>
+      <div><div class="rl">Education</div><div class="rv" id="rEdu"></div></div>
+      <div><div class="rl">Employment</div><div class="rv" id="rJobs"></div></div>
+    </div>
+    <div class="result-rationale">
+      <div class="rlabel">Why this score?</div>
+      <span id="rRationale"></span>
+    </div>
+  </div>
+  <div class="result-actions">
+    <button class="btn-outline" id="btnSearchAnother">Search another role</button>
+    <button class="btn-teal" id="btnExploreMap">Explore the full map &#x2193;</button>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-strip">
+  <div class="stats-grid" id="statsGrid"></div>
+</section>
+
+<!-- TREEMAP -->
+<section class="map-section" id="mapSection">
+  <div class="map-header">
+    <div>
+      <h2>AI Exposure Map</h2>
+      <div class="minfo">Rectangle area = number of workers. Colour = AI exposure score. Hover for details.</div>
+    </div>
+  </div>
+  <div class="map-pills" id="mapPills"></div>
+  <div class="map-container" id="mapContainer">
+    <svg id="treemap-svg"></svg>
+    <div class="tt" id="tt"></div>
+  </div>
+  <div class="legend">
+    <span class="lt">AI Exposure:</span>
+    <span class="lr">0 (Low)</span>
+    <div class="grad"></div>
+    <span class="lr">10 (High)</span>
+  </div>
+</section>
+
+<!-- WHAT THIS MEANS -->
+<section class="meaning">
+  <div class="meaning-inner">
+    <h2>What does this mean for Australian businesses?</h2>
+    <p class="mp">AI is not coming for your job. Someone using AI is. The question is not whether these changes will reach Australian workplaces, but whether your organisation is ready.</p>
+    <div class="card-grid">
+      <div class="card">
+        <h3>Fair Work obligations do not pause for innovation</h3>
+        <p>Using AI in hiring, performance management, or restructuring triggers consultation, general protections, and anti-discrimination obligations under the Fair Work Act.</p>
+      </div>
+      <div class="card">
+        <h3>High exposure &#x2260; job losses</h3>
+        <p>A score of 8+ means the role will be reshaped, not necessarily eliminated. Software developers score 8.5, yet demand for their skills continues to grow.</p>
+      </div>
+      <div class="card">
+        <h3>The real risk is inaction</h3>
+        <p>Organisations that ignore AI governance face regulatory exposure, workforce disengagement, and competitive disadvantage. The time to prepare is now.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="cta-inner">
+    <h2>Ready to get your <span class="accent">AI governance</span> sorted?</h2>
+    <p class="cp">employmentBENEFITS helps Australian businesses navigate AI adoption with confidence. From policy frameworks to Fair Work compliance, we have got you covered.</p>
+    <div class="cta-btns">
+      <a href="https://www.employmentbenefits.com.au" class="primary">Free AI Readiness Assessment</a>
+      <a href="https://www.employmentbenefits.com.au" class="ghost">AI Governance Pack ($995)</a>
+    </div>
+    <p class="caveat">AI exposure scores are indicative estimates generated by AI analysis of Bureau of Labor Statistics occupational data. They are not rigorous predictions and will change as AI capabilities evolve. A high score signals transformation, not necessarily job loss. Inspired by Andrej Karpathy's US Job Market Visualizer.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="eb-footer">
+  <div><span class="fbrand"><span>employment</span>BENEFITS</span> &nbsp;|&nbsp; ABN 67 590 911 558 &nbsp;|&nbsp; Sydney, NSW Australia</div>
+  <div style="margin-top:5px">Data adapted from Bureau of Labor Statistics Occupational Outlook Handbook. Some occupations have been grouped or generalised. AI exposure scores generated via LLM analysis.</div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+var DATA=[
+// ── Computer & IT ──
+{title:"Software Developers",slug:"software-devs",category:"Computer & IT",pay:130160,jobs:1622800,outlook:17,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:8.5,exposure_rationale:"Nearly all work is digital. AI coding assistants already handle substantial portions of routine development. The trajectory is steep and the ceiling is very high."},
+{title:"IT Managers",slug:"it-managers",category:"Computer & IT",pay:164070,jobs:482000,outlook:15,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:7.0,exposure_rationale:"Management involves judgment and relationship-building that resists automation, but strategic planning and reporting tasks are increasingly AI-augmented."},
+{title:"Database Administrators & Architects",slug:"database-admins",category:"Computer & IT",pay:101000,jobs:167200,outlook:8,outlook_desc:"Growing",education:"Bachelor's degree",exposure:8.0,exposure_rationale:"Core tasks of query optimisation, schema design, and monitoring are highly automatable. Cloud-managed services already reduce demand."},
+{title:"Web & App Developers",slug:"web-devs",category:"Computer & IT",pay:80730,jobs:199400,outlook:16,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:9.0,exposure_rationale:"Front-end code generation is among the strongest current LLM capabilities. Standard web development is rapidly becoming AI-assisted."},
+{title:"Cybersecurity Analysts",slug:"cybersecurity",category:"Computer & IT",pay:112000,jobs:175000,outlook:33,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:7.5,exposure_rationale:"Threat analysis and log review are highly automatable, but incident response and adversarial thinking retain a human edge."},
+{title:"Data Scientists & Analysts",slug:"data-scientists",category:"Computer & IT",pay:103500,jobs:192000,outlook:36,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:8.5,exposure_rationale:"Statistical modelling, data cleaning, and visualisation are core LLM capabilities. The entire workflow is digital and increasingly automatable."},
+{title:"IT Support & Helpdesk",slug:"it-support",category:"Computer & IT",pay:57910,jobs:882300,outlook:5,outlook_desc:"Growing",education:"Diploma/Cert IV",exposure:7.0,exposure_rationale:"Tier-1 troubleshooting and ticket resolution are prime targets for AI chatbots. Higher-tier support retains human need."},
+{title:"Computer Programmers",slug:"programmers",category:"Computer & IT",pay:97800,jobs:147400,outlook:-11,outlook_desc:"Declining",education:"Bachelor's degree",exposure:9.0,exposure_rationale:"Pure coding roles are the most directly automatable by LLMs. The occupation is already declining as it merges into broader developer roles."},
+{title:"Systems Administrators",slug:"sysadmins",category:"Computer & IT",pay:84810,jobs:361900,outlook:2,outlook_desc:"Stable",education:"Bachelor's degree",exposure:7.0,exposure_rationale:"Infrastructure management is increasingly automated via cloud platforms and AI-driven monitoring tools."},
+{title:"Network Engineers",slug:"network-engineers",category:"Computer & IT",pay:92810,jobs:175100,outlook:2,outlook_desc:"Stable",education:"Bachelor's degree",exposure:6.5,exposure_rationale:"Network configuration and troubleshooting have digital components that are AI-assistable, but physical infrastructure work provides some insulation."},
+{title:"UX/UI Designers",slug:"ux-designers",category:"Computer & IT",pay:83200,jobs:110000,outlook:8,outlook_desc:"Growing",education:"Bachelor's degree",exposure:7.5,exposure_rationale:"Wireframing and prototyping are rapidly becoming AI-augmented. User research and empathy-driven design retain human value."},
+{title:"Project Managers (IT)",slug:"it-project-managers",category:"Computer & IT",pay:98580,jobs:380000,outlook:6,outlook_desc:"Stable",education:"Bachelor's degree",exposure:6.5,exposure_rationale:"Stakeholder management and decision-making resist automation, but project reporting, scheduling, and status tracking are highly AI-exposed."},
+
+// ── Business & Finance ──
+{title:"Accountants & Auditors",slug:"accountants",category:"Business & Finance",pay:79880,jobs:1508200,outlook:4,outlook_desc:"Stable",education:"Bachelor's degree",exposure:7.5,exposure_rationale:"Core accounting tasks are rules-based and digital. AI already handles bookkeeping, reconciliation, and basic audit procedures."},
+{title:"Financial Analysts",slug:"financial-analysts",category:"Business & Finance",pay:96220,jobs:329500,outlook:8,outlook_desc:"Growing",education:"Bachelor's degree",exposure:8.0,exposure_rationale:"Financial modelling and data analysis are entirely digital. LLMs can already produce analyst-grade summaries."},
+{title:"Management Consultants",slug:"management-consultants",category:"Business & Finance",pay:95290,jobs:918400,outlook:10,outlook_desc:"Growing",education:"Bachelor's degree",exposure:7.5,exposure_rationale:"Consulting deliverables are largely text and data-based. Client relationship management provides some protection."},
+{title:"HR Specialists & Advisers",slug:"hr-specialists",category:"Business & Finance",pay:64240,jobs:784100,outlook:6,outlook_desc:"Stable",education:"Bachelor's degree",exposure:6.5,exposure_rationale:"Policy interpretation, compliance, and documentation are AI-augmentable, but employee relations and judgment calls require human nuance."},
+{title:"Marketing & Market Research Analysts",slug:"marketing-analysts",category:"Business & Finance",pay:68230,jobs:905000,outlook:13,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:8.0,exposure_rationale:"Survey design, data analysis, and report writing are fully digital. AI tools already generate market insights from raw data."},
+{title:"Finance Managers & CFOs",slug:"finance-managers",category:"Business & Finance",pay:139790,jobs:780000,outlook:16,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:7.0,exposure_rationale:"Strategic financial leadership involves judgment, but reporting, forecasting, and analysis tasks face high AI exposure."},
+{title:"Financial Planners & Advisers",slug:"financial-advisers",category:"Business & Finance",pay:94170,jobs:330300,outlook:7,outlook_desc:"Stable",education:"Bachelor's degree",exposure:6.0,exposure_rationale:"Robo-advisers handle portfolio management, but trust-based client relationships provide meaningful insulation."},
+{title:"Loan & Mortgage Officers",slug:"loan-officers",category:"Business & Finance",pay:63380,jobs:328700,outlook:3,outlook_desc:"Stable",education:"Bachelor's degree",exposure:7.5,exposure_rationale:"Underwriting and application processing are rules-based and digital. Relationship lending provides some protection."},
+{title:"Recruitment Consultants",slug:"recruiters",category:"Business & Finance",pay:62400,jobs:320000,outlook:4,outlook_desc:"Stable",education:"Bachelor's degree",exposure:7.0,exposure_rationale:"Candidate sourcing, resume screening, and outreach are heavily AI-automatable. Client and candidate relationship management retains human value."},
+{title:"Procurement & Supply Chain Officers",slug:"procurement",category:"Business & Finance",pay:75000,jobs:210000,outlook:5,outlook_desc:"Growing",education:"Bachelor's degree",exposure:6.5,exposure_rationale:"Vendor comparison, purchase order processing, and inventory forecasting are digital and rules-based. Negotiation and supplier relationships require humans."},
+{title:"Compliance Officers",slug:"compliance-officers",category:"Business & Finance",pay:78000,jobs:340000,outlook:6,outlook_desc:"Stable",education:"Bachelor's degree",exposure:7.0,exposure_rationale:"Regulatory monitoring and policy documentation are AI-augmentable, but judgment on ambiguous compliance matters retains human need."},
+{title:"Insurance Underwriters",slug:"insurance-underwriters",category:"Business & Finance",pay:76800,jobs:115000,outlook:-2,outlook_desc:"Declining",education:"Bachelor's degree",exposure:8.0,exposure_rationale:"Risk assessment and pricing decisions are data-driven and rules-based. AI underwriting tools are already widely deployed."},
+{title:"Tax Preparers & Agents",slug:"tax-agents",category:"Business & Finance",pay:52000,jobs:82000,outlook:-2,outlook_desc:"Declining",education:"Certificate/Diploma",exposure:8.5,exposure_rationale:"Tax preparation is rules-based and document-driven. AI tax software increasingly handles standard returns."},
+{title:"Real Estate Property Managers",slug:"property-managers",category:"Business & Finance",pay:58000,jobs:160000,outlook:3,outlook_desc:"Stable",education:"Certificate IV",exposure:5.5,exposure_rationale:"Tenant management blends digital administration with physical inspections and interpersonal dispute resolution."},
+
+// ── Healthcare ──
+{title:"Registered Nurses",slug:"registered-nurses",category:"Healthcare",pay:81220,jobs:3175390,outlook:6,outlook_desc:"Stable",education:"Bachelor's degree",exposure:4.0,exposure_rationale:"Nursing requires physical presence, manual skill, and real-time patient assessment. AI assists with documentation but cannot replace bedside care."},
+{title:"Doctors, GPs & Surgeons",slug:"doctors",category:"Healthcare",pay:229300,jobs:726000,outlook:3,outlook_desc:"Stable",education:"Doctoral degree",exposure:5.0,exposure_rationale:"Diagnosis has an AI-assistable digital component, but physical examination, surgery, and patient trust require human presence."},
+{title:"Pharmacists",slug:"pharmacists",category:"Healthcare",pay:132750,jobs:322200,outlook:-2,outlook_desc:"Flat",education:"Doctoral degree",exposure:6.0,exposure_rationale:"Drug interaction checking and prescription verification are automatable. Clinical judgment provides insulation."},
+{title:"Medical Transcriptionists",slug:"med-transcriptionists",category:"Healthcare",pay:30100,jobs:52500,outlook:-7,outlook_desc:"Declining",education:"Certificate",exposure:10.0,exposure_rationale:"Fully digital, routine information processing. Speech-to-text AI already performs this at or above human level."},
+{title:"Dental Hygienists & Assistants",slug:"dental-hygienists",category:"Healthcare",pay:81400,jobs:230700,outlook:7,outlook_desc:"Growing",education:"Diploma",exposure:2.0,exposure_rationale:"Hands-on clinical work requiring manual dexterity and direct patient contact."},
+{title:"Aged Care & Home Care Workers",slug:"aged-care",category:"Healthcare",pay:30180,jobs:3670700,outlook:21,outlook_desc:"Strong growth",education:"Certificate III",exposure:1.5,exposure_rationale:"Physical caregiving in unpredictable home environments. Almost entirely hands-on with minimal digital component."},
+{title:"Physiotherapists",slug:"physiotherapists",category:"Healthcare",pay:97720,jobs:259400,outlook:14,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:3.0,exposure_rationale:"Requires hands-on physical manipulation, real-time patient assessment, and motivational coaching."},
+{title:"Health Services Managers",slug:"health-managers",category:"Healthcare",pay:104830,jobs:480700,outlook:29,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:6.5,exposure_rationale:"Administrative and planning tasks are digital and AI-assistable, but leadership and compliance judgment require human oversight."},
+{title:"Radiographers & Medical Imaging",slug:"radiographers",category:"Healthcare",pay:88000,jobs:72000,outlook:6,outlook_desc:"Stable",education:"Bachelor's degree",exposure:6.0,exposure_rationale:"AI image analysis is advancing rapidly for diagnostic imaging, but equipment operation and patient positioning remain manual."},
+{title:"Occupational Therapists",slug:"occupational-therapists",category:"Healthcare",pay:90000,jobs:145000,outlook:12,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:3.5,exposure_rationale:"Hands-on assessment and therapy in diverse real-world environments. Documentation has AI exposure but core practice is physical."},
+{title:"Midwives",slug:"midwives",category:"Healthcare",pay:82000,jobs:32000,outlook:4,outlook_desc:"Stable",education:"Bachelor's degree",exposure:3.0,exposure_rationale:"Direct patient care requiring physical presence, clinical judgment in real-time, and deep interpersonal trust."},
+{title:"Veterinarians",slug:"veterinarians",category:"Healthcare",pay:105000,jobs:86000,outlook:8,outlook_desc:"Growing",education:"Doctoral degree",exposure:4.5,exposure_rationale:"Animal examination, surgery, and treatment are physical. Diagnostic research and record-keeping have AI exposure."},
+{title:"Pathologists & Lab Technicians",slug:"pathology-techs",category:"Healthcare",pay:55000,jobs:335000,outlook:5,outlook_desc:"Stable",education:"Diploma/Bachelor's",exposure:6.5,exposure_rationale:"Automated analysers and AI diagnostic tools handle increasing proportions of routine laboratory work."},
+{title:"Paramedics & Ambulance Officers",slug:"paramedics",category:"Healthcare",pay:72000,jobs:18000,outlook:10,outlook_desc:"Growing",education:"Bachelor's degree",exposure:2.0,exposure_rationale:"Emergency medical response in unpredictable, high-stakes physical environments. AI has minimal application to core duties."},
+
+// ── Education ──
+{title:"Primary School Teachers",slug:"primary-teachers",category:"Education",pay:61690,jobs:1363300,outlook:1,outlook_desc:"Flat",education:"Bachelor's degree",exposure:5.0,exposure_rationale:"Classroom management and child development require physical presence. Lesson planning and marking have high AI exposure."},
+{title:"Secondary School Teachers",slug:"secondary-teachers",category:"Education",pay:64000,jobs:1100000,outlook:2,outlook_desc:"Stable",education:"Bachelor's degree",exposure:5.5,exposure_rationale:"Subject-specific instruction blends physical classroom presence with content creation. Assessment and curriculum design are AI-exposed."},
+{title:"University Lecturers & Researchers",slug:"uni-lecturers",category:"Education",pay:80560,jobs:1334700,outlook:4,outlook_desc:"Stable",education:"Doctoral degree",exposure:6.5,exposure_rationale:"Lectures, marking, and research writing are significantly AI-augmentable. In-person mentoring and lab work provide protection."},
+{title:"Special Education Teachers",slug:"special-ed",category:"Education",pay:61820,jobs:476300,outlook:-1,outlook_desc:"Flat",education:"Bachelor's degree",exposure:4.0,exposure_rationale:"Individualised instruction requires deep human rapport and adaptive, in-person intervention."},
+{title:"Teacher Aides & Assistants",slug:"teacher-aides",category:"Education",pay:30920,jobs:1300500,outlook:2,outlook_desc:"Stable",education:"Certificate III",exposure:4.5,exposure_rationale:"In-classroom support is physical and interpersonal. Marking and material preparation are increasingly automatable."},
+{title:"Early Childhood Educators",slug:"early-childhood-educators",category:"Education",pay:34000,jobs:120000,outlook:5,outlook_desc:"Growing",education:"Certificate III/Diploma",exposure:2.5,exposure_rationale:"Physical care and supervision of young children in structured and unstructured environments. Minimal digital component."},
+{title:"VET & TAFE Trainers",slug:"vet-trainers",category:"Education",pay:68000,jobs:80000,outlook:3,outlook_desc:"Stable",education:"Cert IV TAE/Bachelor's",exposure:5.0,exposure_rationale:"Practical skills training often requires physical demonstration. Course content development and assessment are AI-exposed."},
+{title:"Tutors & Private Instructors",slug:"tutors",category:"Education",pay:40000,jobs:95000,outlook:3,outlook_desc:"Stable",education:"Varies",exposure:6.0,exposure_rationale:"One-on-one instruction has interpersonal value, but AI tutoring tools are rapidly improving at personalised content delivery."},
+
+// ── Legal ──
+{title:"Lawyers & Solicitors",slug:"lawyers",category:"Legal",pay:135740,jobs:813900,outlook:5,outlook_desc:"Stable",education:"Professional degree",exposure:7.0,exposure_rationale:"Legal research, brief writing, and document review are heavily digital. Courtroom advocacy and client counsel retain human need."},
+{title:"Paralegals & Legal Assistants",slug:"paralegals",category:"Legal",pay:56230,jobs:350000,outlook:4,outlook_desc:"Stable",education:"Diploma",exposure:8.5,exposure_rationale:"Document review, legal research, and filing are almost entirely digital and rules-based. Among the most AI-exposed support roles."},
+{title:"Judges & Magistrates",slug:"judges",category:"Legal",pay:128710,jobs:62000,outlook:0,outlook_desc:"Flat",education:"Professional degree",exposure:5.0,exposure_rationale:"Judicial authority and constitutional interpretation require humans. Legal reasoning has an AI-assistable research component."},
+{title:"Conveyancers",slug:"conveyancers",category:"Legal",pay:65000,jobs:18000,outlook:2,outlook_desc:"Stable",education:"Diploma/degree",exposure:7.5,exposure_rationale:"Property transfer documentation is highly standardised and digital. Client liaison provides some insulation."},
+
+// ── Management ──
+{title:"General & Operations Managers",slug:"general-managers",category:"Management",pay:97970,jobs:3080200,outlook:4,outlook_desc:"Stable",education:"Bachelor's degree",exposure:6.0,exposure_rationale:"Strategic oversight blends digital planning with physical presence and relationship management."},
+{title:"Chief Executives & MDs",slug:"chief-executives",category:"Management",pay:206680,jobs:210000,outlook:-1,outlook_desc:"Flat",education:"Bachelor's degree",exposure:5.5,exposure_rationale:"Executive leadership involves judgment, stakeholder relationships, and vision-setting that resist automation."},
+{title:"Office & Administration Managers",slug:"office-managers",category:"Management",pay:101870,jobs:360700,outlook:5,outlook_desc:"Growing",education:"Bachelor's degree",exposure:6.5,exposure_rationale:"Facility and operations coordination combines physical oversight with digital planning. The digital portion is highly AI-augmentable."},
+{title:"Marketing Managers",slug:"marketing-managers",category:"Management",pay:120000,jobs:310000,outlook:8,outlook_desc:"Growing",education:"Bachelor's degree",exposure:7.0,exposure_rationale:"Campaign strategy involves human creativity, but content production, analytics, and reporting are heavily AI-exposed."},
+{title:"Sales Managers",slug:"sales-managers",category:"Management",pay:110000,jobs:420000,outlook:3,outlook_desc:"Stable",education:"Bachelor's degree",exposure:5.5,exposure_rationale:"Team leadership and key account relationships resist automation. Pipeline analysis and forecasting are AI-exposed."},
+
+// ── Sales & Retail ──
+{title:"Retail Sales Assistants",slug:"retail-sales",category:"Sales & Retail",pay:30600,jobs:4071200,outlook:-2,outlook_desc:"Declining",education:"No formal requirement",exposure:3.0,exposure_rationale:"In-store customer interaction is physical and interpersonal. E-commerce shift is a bigger threat than AI directly."},
+{title:"Real Estate Agents & Auctioneers",slug:"real-estate",category:"Sales & Retail",pay:49980,jobs:478000,outlook:2,outlook_desc:"Stable",education:"Certificate IV",exposure:5.5,exposure_rationale:"Market analysis is AI-exposed, but property inspections, negotiations, and local knowledge require human presence."},
+{title:"Telemarketers & Call Centre Sales",slug:"telemarketers",category:"Sales & Retail",pay:29800,jobs:93000,outlook:-18,outlook_desc:"Declining",education:"No formal requirement",exposure:10.0,exposure_rationale:"Entirely digital, scripted communication. AI voice agents can replicate this at scale."},
+{title:"Insurance Brokers & Agents",slug:"insurance-brokers",category:"Sales & Retail",pay:57860,jobs:522600,outlook:5,outlook_desc:"Stable",education:"Year 12/Diploma",exposure:6.0,exposure_rationale:"Policy comparison and quoting are automatable. Client relationships and trust-building provide some protection."},
+{title:"Advertising & Media Sales",slug:"ad-sales",category:"Sales & Retail",pay:54550,jobs:114200,outlook:-7,outlook_desc:"Declining",education:"Bachelor's degree",exposure:7.0,exposure_rationale:"Programmatic advertising already automates much of this role. Client relationship management provides residual protection."},
+{title:"Travel Agents & Consultants",slug:"travel-agents",category:"Sales & Retail",pay:48000,jobs:28000,outlook:-5,outlook_desc:"Declining",education:"Certificate/Diploma",exposure:7.5,exposure_rationale:"Online booking platforms and AI travel assistants handle most itinerary planning. Complex or luxury travel retains some human demand."},
+{title:"Sales Representatives (B2B)",slug:"sales-reps-b2b",category:"Sales & Retail",pay:72000,jobs:850000,outlook:2,outlook_desc:"Stable",education:"Bachelor's degree",exposure:5.0,exposure_rationale:"Relationship-driven B2B sales retain significant human value. CRM management and proposal writing are AI-exposed."},
+{title:"Checkout Operators & Cashiers",slug:"cashiers",category:"Sales & Retail",pay:28000,jobs:220000,outlook:-10,outlook_desc:"Declining",education:"No formal requirement",exposure:4.0,exposure_rationale:"Self-checkout and scan-and-go technologies are displacing cashier roles. This is hardware automation more than AI."},
+
+// ── Administration ──
+{title:"Customer Service Officers",slug:"customer-service",category:"Administration",pay:37780,jobs:2862300,outlook:-5,outlook_desc:"Declining",education:"Year 12",exposure:8.5,exposure_rationale:"Text and voice-based customer interactions are prime targets for AI chatbots. Already significant deployment in this space."},
+{title:"Admin Assistants & PAs",slug:"admin-assistants",category:"Administration",pay:41000,jobs:3250000,outlook:-10,outlook_desc:"Declining",education:"Year 12",exposure:8.0,exposure_rationale:"Scheduling, correspondence, document preparation, and filing are entirely digital. AI assistants handle these increasingly well."},
+{title:"Data Entry Operators",slug:"data-entry",category:"Administration",pay:35930,jobs:152900,outlook:-26,outlook_desc:"Declining",education:"Year 12",exposure:10.0,exposure_rationale:"Purely routine digital information processing. AI and OCR already outperform humans on speed and accuracy."},
+{title:"Bookkeepers",slug:"bookkeepers",category:"Administration",pay:45560,jobs:1498100,outlook:-5,outlook_desc:"Declining",education:"Certificate IV",exposure:8.0,exposure_rationale:"Transaction recording and reconciliation are rules-based digital tasks. Automated accounting software is already widespread."},
+{title:"Receptionists",slug:"receptionists",category:"Administration",pay:32410,jobs:1000800,outlook:-5,outlook_desc:"Declining",education:"Year 12",exposure:6.0,exposure_rationale:"Physical greeting and in-person visitor management retain human need. Phone and scheduling tasks face high AI exposure."},
+{title:"Payroll Officers",slug:"payroll-officers",category:"Administration",pay:58000,jobs:95000,outlook:-3,outlook_desc:"Declining",education:"Certificate IV",exposure:8.0,exposure_rationale:"Payroll processing is rules-based, repetitive, and digital. AI-integrated payroll platforms handle most tasks."},
+{title:"Medical Receptionists & Secretaries",slug:"medical-receptionists",category:"Administration",pay:42000,jobs:80000,outlook:2,outlook_desc:"Stable",education:"Certificate III",exposure:6.5,exposure_rationale:"Patient-facing reception retains human need. Appointment booking and records management are increasingly AI-assisted."},
+
+// ── Trades & Construction ──
+{title:"Construction Labourers",slug:"construction-labourers",category:"Trades & Construction",pay:39520,jobs:1308500,outlook:4,outlook_desc:"Stable",education:"No formal requirement",exposure:1.0,exposure_rationale:"Almost entirely physical labour in unpredictable outdoor environments. AI has essentially no impact on daily work."},
+{title:"Electricians",slug:"electricians",category:"Trades & Construction",pay:61590,jobs:736900,outlook:6,outlook_desc:"Stable",education:"Trade certificate",exposure:2.0,exposure_rationale:"Skilled manual work requiring physical presence, dexterity, and real-time problem-solving in diverse environments."},
+{title:"Plumbers & Gasfitters",slug:"plumbers",category:"Trades & Construction",pay:60090,jobs:553000,outlook:2,outlook_desc:"Stable",education:"Trade certificate",exposure:1.5,exposure_rationale:"Physical trade work in variable environments. Requires hands-on troubleshooting that AI cannot perform."},
+{title:"Roofers & Tilers",slug:"roofers",category:"Trades & Construction",pay:43580,jobs:152600,outlook:-1,outlook_desc:"Flat",education:"No formal requirement",exposure:0.5,exposure_rationale:"Entirely physical outdoor work. Among the lowest possible AI exposure of any occupation."},
+{title:"Carpenters & Joiners",slug:"carpenters",category:"Trades & Construction",pay:52640,jobs:740500,outlook:1,outlook_desc:"Flat",education:"Trade certificate",exposure:1.5,exposure_rationale:"Skilled physical craft requiring measurement, cutting, and assembly in variable environments."},
+{title:"Painters & Plasterers",slug:"painters",category:"Trades & Construction",pay:50000,jobs:120000,outlook:1,outlook_desc:"Flat",education:"Trade certificate",exposure:1.0,exposure_rationale:"Manual surface preparation and application in variable conditions. Minimal digital component."},
+{title:"Bricklayers & Concreters",slug:"bricklayers",category:"Trades & Construction",pay:55000,jobs:85000,outlook:1,outlook_desc:"Flat",education:"Trade certificate",exposure:1.0,exposure_rationale:"Heavy physical work requiring strength, precision, and adaptability to site conditions."},
+{title:"Construction Managers & Supervisors",slug:"construction-managers",category:"Trades & Construction",pay:105000,jobs:180000,outlook:5,outlook_desc:"Growing",education:"Diploma/degree",exposure:5.0,exposure_rationale:"Project scheduling and cost estimation are AI-assistable. On-site supervision and safety management require physical presence."},
+
+// ── Transport & Logistics ──
+{title:"Truck Drivers (Heavy Vehicle)",slug:"truck-drivers",category:"Transport & Logistics",pay:49920,jobs:2099000,outlook:3,outlook_desc:"Stable",education:"Licence/certificate",exposure:2.0,exposure_rationale:"Physical driving in complex, unpredictable environments. Autonomous vehicles are a separate technology pathway."},
+{title:"Delivery Drivers & Couriers",slug:"delivery-drivers",category:"Transport & Logistics",pay:38200,jobs:1680000,outlook:7,outlook_desc:"Growing",education:"Licence",exposure:2.0,exposure_rationale:"Last-mile delivery requires physical navigation, package handling, and customer interaction."},
+{title:"Bus Drivers",slug:"bus-drivers",category:"Transport & Logistics",pay:46010,jobs:682000,outlook:3,outlook_desc:"Stable",education:"Licence",exposure:1.5,exposure_rationale:"Operating large vehicles on public roads with passenger safety responsibility."},
+{title:"Warehouse Workers & Storepersons",slug:"warehouse-workers",category:"Transport & Logistics",pay:42000,jobs:420000,outlook:2,outlook_desc:"Stable",education:"No formal requirement",exposure:3.0,exposure_rationale:"Physical picking, packing, and loading. Warehouse robotics is the primary automation threat rather than AI."},
+{title:"Forklift Operators",slug:"forklift-operators",category:"Transport & Logistics",pay:48000,jobs:110000,outlook:1,outlook_desc:"Flat",education:"Licence",exposure:2.5,exposure_rationale:"Physical operation of machinery in warehouse and dock environments. Automation is hardware-driven, not AI-driven."},
+{title:"Logistics & Supply Chain Coordinators",slug:"logistics-coordinators",category:"Transport & Logistics",pay:62000,jobs:185000,outlook:5,outlook_desc:"Growing",education:"Diploma/degree",exposure:6.5,exposure_rationale:"Route planning, inventory management, and demand forecasting are digital and AI-augmentable. Physical coordination retains some human need."},
+
+// ── Hospitality ──
+{title:"Chefs & Cooks",slug:"chefs",category:"Hospitality",pay:32080,jobs:1358000,outlook:6,outlook_desc:"Stable",education:"Trade certificate",exposure:1.5,exposure_rationale:"Physical food preparation in high-speed kitchen environments. Creative and sensory aspects resist automation."},
+{title:"Waitstaff & Front of House",slug:"waitstaff",category:"Hospitality",pay:29120,jobs:2322900,outlook:4,outlook_desc:"Stable",education:"No formal requirement",exposure:2.0,exposure_rationale:"Customer-facing service requiring physical presence, social skills, and adaptability."},
+{title:"Fast Food & Counter Workers",slug:"fast-food",category:"Hospitality",pay:26040,jobs:3538000,outlook:5,outlook_desc:"Stable",education:"No formal requirement",exposure:2.5,exposure_rationale:"Repetitive physical tasks in controlled environments. Kiosk ordering reduces some roles but food prep remains manual."},
+{title:"Hotel & Accommodation Managers",slug:"hotel-managers",category:"Hospitality",pay:60000,jobs:42000,outlook:5,outlook_desc:"Growing",education:"Diploma/degree",exposure:5.0,exposure_rationale:"Revenue management and reservations are increasingly AI-driven. Guest experience and on-site leadership require human presence."},
+{title:"Baristas & Bartenders",slug:"baristas-bartenders",category:"Hospitality",pay:29000,jobs:180000,outlook:4,outlook_desc:"Stable",education:"No formal requirement",exposure:2.0,exposure_rationale:"Physical drink preparation and face-to-face customer engagement. Social interaction is a core part of the role."},
+{title:"Kitchen Hands & Food Preparation",slug:"kitchen-hands",category:"Hospitality",pay:26000,jobs:250000,outlook:3,outlook_desc:"Stable",education:"No formal requirement",exposure:1.5,exposure_rationale:"Manual food preparation, cleaning, and kitchen support in a physical environment."},
+
+// ── Creative & Media ──
+{title:"Graphic & Visual Designers",slug:"graphic-designers",category:"Creative & Media",pay:57990,jobs:281500,outlook:2,outlook_desc:"Stable",education:"Bachelor's degree",exposure:8.5,exposure_rationale:"Visual design is a rapidly advancing AI capability. AI image generation tools are already transforming the profession."},
+{title:"Writers, Journalists & Content Creators",slug:"writers",category:"Creative & Media",pay:69510,jobs:143200,outlook:-2,outlook_desc:"Declining",education:"Bachelor's degree",exposure:8.5,exposure_rationale:"Text generation is the core capability of LLMs. Content writing, copywriting, and technical writing face the most direct exposure."},
+{title:"Editors & Subeditors",slug:"editors",category:"Creative & Media",pay:63350,jobs:107400,outlook:-5,outlook_desc:"Declining",education:"Bachelor's degree",exposure:8.0,exposure_rationale:"Proofreading, copy editing, and content evaluation are strongly AI-assisted tasks. Editorial judgment provides some protection."},
+{title:"Translators & Interpreters",slug:"translators",category:"Creative & Media",pay:54920,jobs:62600,outlook:4,outlook_desc:"Stable",education:"Bachelor's degree",exposure:9.0,exposure_rationale:"Machine translation has reached near-professional quality for many language pairs. Written translation faces extremely high exposure."},
+{title:"Photographers & Videographers",slug:"photographers",category:"Creative & Media",pay:38950,jobs:57600,outlook:4,outlook_desc:"Stable",education:"Year 12/Diploma",exposure:5.0,exposure_rationale:"Physical presence for shoots is required, but AI editing and generation tools are transforming commercial photography."},
+{title:"Public Relations & Communications",slug:"pr-comms",category:"Creative & Media",pay:75000,jobs:90000,outlook:4,outlook_desc:"Stable",education:"Bachelor's degree",exposure:7.0,exposure_rationale:"Press releases, media monitoring, and content production are AI-augmentable. Stakeholder relationship management retains human value."},
+{title:"Social Media Managers",slug:"social-media-managers",category:"Creative & Media",pay:62000,jobs:70000,outlook:8,outlook_desc:"Growing",education:"Bachelor's degree",exposure:7.5,exposure_rationale:"Content creation, scheduling, and analytics are heavily AI-assisted. Community engagement and brand voice development retain human value."},
+{title:"Film, TV & Radio Producers",slug:"media-producers",category:"Creative & Media",pay:80000,jobs:45000,outlook:2,outlook_desc:"Stable",education:"Bachelor's degree",exposure:5.5,exposure_rationale:"Physical production management and creative direction retain human need. Scripting, editing, and scheduling are AI-exposed."},
+
+// ── Emergency & Protective Services ──
+{title:"Police Officers & Detectives",slug:"police",category:"Emergency Services",pay:65790,jobs:799400,outlook:3,outlook_desc:"Stable",education:"Diploma/degree",exposure:3.0,exposure_rationale:"Law enforcement requires physical presence, quick judgment in unpredictable situations, and community interaction."},
+{title:"Firefighters",slug:"firefighters",category:"Emergency Services",pay:52500,jobs:327300,outlook:4,outlook_desc:"Stable",education:"Certificate/diploma",exposure:1.0,exposure_rationale:"Emergency response in dangerous physical environments. Among the most AI-resistant occupations."},
+{title:"Security Officers & Guards",slug:"security",category:"Emergency Services",pay:33150,jobs:1160000,outlook:3,outlook_desc:"Stable",education:"Certificate II",exposure:3.0,exposure_rationale:"Physical presence is the core function. AI surveillance assists but cannot replace on-site human response."},
+{title:"Correctional Officers",slug:"correctional-officers",category:"Emergency Services",pay:72000,jobs:68000,outlook:2,outlook_desc:"Stable",education:"Certificate/diploma",exposure:2.0,exposure_rationale:"Physical supervision of inmates in controlled but unpredictable environments. Record-keeping has minor AI exposure."},
+
+// ── Cleaning & Maintenance ──
+{title:"Cleaners & Laundry Workers",slug:"cleaners",category:"Cleaning & Maintenance",pay:31990,jobs:2373000,outlook:2,outlook_desc:"Stable",education:"No formal requirement",exposure:1.0,exposure_rationale:"Physical cleaning in diverse environments. Most work requires human adaptability."},
+{title:"Gardeners & Landscapers",slug:"gardeners",category:"Cleaning & Maintenance",pay:34370,jobs:1260000,outlook:4,outlook_desc:"Stable",education:"No formal requirement",exposure:0.5,exposure_rationale:"Outdoor physical labour in highly variable conditions. Virtually no AI exposure."},
+{title:"Pest Control Workers",slug:"pest-control",category:"Cleaning & Maintenance",pay:38660,jobs:87000,outlook:6,outlook_desc:"Stable",education:"Certificate",exposure:1.5,exposure_rationale:"On-site inspection and treatment in variable environments. Scheduling is the only AI-exposed component."},
+
+// ── Manufacturing & Production ──
+{title:"Assemblers & Production Workers",slug:"assemblers",category:"Manufacturing",pay:36090,jobs:1773600,outlook:-4,outlook_desc:"Declining",education:"Year 12",exposure:2.0,exposure_rationale:"Repetitive manual assembly. Traditional robotics is the automation threat, not LLM-based AI."},
+{title:"Welders & Boilermakers",slug:"welders",category:"Manufacturing",pay:47010,jobs:402400,outlook:0,outlook_desc:"Flat",education:"Trade certificate",exposure:1.5,exposure_rationale:"Skilled manual work requiring steady hands, spatial judgment, and physical presence."},
+{title:"Machinists & CNC Operators",slug:"machinists",category:"Manufacturing",pay:47940,jobs:349600,outlook:0,outlook_desc:"Flat",education:"Trade certificate",exposure:2.5,exposure_rationale:"CNC programming has some AI exposure, but physical machine operation and quality inspection require human presence."},
+{title:"Food Processing Workers",slug:"food-processing",category:"Manufacturing",pay:36000,jobs:230000,outlook:1,outlook_desc:"Flat",education:"No formal requirement",exposure:2.0,exposure_rationale:"Manual handling in controlled factory environments. Robotics, not AI, is the primary automation pathway."},
+{title:"Quality Inspectors & Testers",slug:"quality-inspectors",category:"Manufacturing",pay:52000,jobs:180000,outlook:-2,outlook_desc:"Declining",education:"Certificate/Diploma",exposure:5.0,exposure_rationale:"Visual inspection and testing have AI-augmentable components. Physical product handling remains manual."},
+
+// ── Personal Services ──
+{title:"Hairdressers & Barbers",slug:"hairdressers",category:"Personal Services",pay:30790,jobs:653500,outlook:6,outlook_desc:"Stable",education:"Certificate III",exposure:1.5,exposure_rationale:"Hands-on personal service requiring creativity, dexterity, and interpersonal skills."},
+{title:"Childcare Workers",slug:"childcare",category:"Personal Services",pay:27490,jobs:563800,outlook:3,outlook_desc:"Stable",education:"Certificate III",exposure:1.0,exposure_rationale:"Physical caregiving for children in dynamic environments. Requires patience and human warmth."},
+{title:"Fitness Instructors & Personal Trainers",slug:"fitness",category:"Personal Services",pay:40700,jobs:339800,outlook:14,outlook_desc:"Strong growth",education:"Certificate III/IV",exposure:2.5,exposure_rationale:"Physical demonstration, form correction, and motivation require in-person presence."},
+{title:"Beauty Therapists",slug:"beauty-therapists",category:"Personal Services",pay:35000,jobs:50000,outlook:5,outlook_desc:"Growing",education:"Certificate III/IV",exposure:1.5,exposure_rationale:"Hands-on beauty treatments requiring dexterity and client interaction. Booking systems are AI-exposed."},
+{title:"Massage Therapists",slug:"massage-therapists",category:"Personal Services",pay:42000,jobs:25000,outlook:6,outlook_desc:"Stable",education:"Diploma",exposure:1.0,exposure_rationale:"Entirely physical, hands-on therapeutic work. Among the most AI-resistant service occupations."},
+{title:"Funeral Directors & Embalmers",slug:"funeral-directors",category:"Personal Services",pay:55000,jobs:8000,outlook:2,outlook_desc:"Stable",education:"Diploma",exposure:2.5,exposure_rationale:"Highly interpersonal and physical work. Documentation and scheduling have minor AI exposure."},
+
+// ── Engineering ──
+{title:"Civil Engineers",slug:"civil-engineers",category:"Engineering",pay:89940,jobs:332200,outlook:4,outlook_desc:"Stable",education:"Bachelor's degree",exposure:5.5,exposure_rationale:"Design calculations and documentation are AI-assistable, but site inspection and regulatory judgment require humans."},
+{title:"Architects",slug:"architects",category:"Engineering",pay:82840,jobs:125400,outlook:3,outlook_desc:"Stable",education:"Bachelor's degree",exposure:6.5,exposure_rationale:"Drafting and rendering are rapidly becoming AI-augmented. Client relationships and creative vision provide some insulation."},
+{title:"Mechanical Engineers",slug:"mech-engineers",category:"Engineering",pay:95300,jobs:291400,outlook:2,outlook_desc:"Stable",education:"Bachelor's degree",exposure:5.5,exposure_rationale:"Design and simulation work has digital AI exposure, but prototyping and testing require physical presence."},
+{title:"Electrical Engineers",slug:"electrical-engineers",category:"Engineering",pay:104610,jobs:192400,outlook:3,outlook_desc:"Stable",education:"Bachelor's degree",exposure:6.0,exposure_rationale:"Circuit design and simulation are increasingly AI-assisted. Hardware testing and field work retain human requirements."},
+{title:"Environmental Engineers & Scientists",slug:"environmental-engineers",category:"Engineering",pay:82000,jobs:84000,outlook:6,outlook_desc:"Stable",education:"Bachelor's degree",exposure:5.0,exposure_rationale:"Data analysis and report writing are AI-exposed. Field sampling, site assessment, and regulatory consultation require human presence."},
+{title:"Mining Engineers",slug:"mining-engineers",category:"Engineering",pay:130000,jobs:10000,outlook:2,outlook_desc:"Stable",education:"Bachelor's degree",exposure:5.0,exposure_rationale:"Mine planning and geological modelling have AI exposure. On-site safety oversight and physical operations management are human-dependent."},
+{title:"Surveyors & Spatial Scientists",slug:"surveyors",category:"Engineering",pay:85000,jobs:18000,outlook:3,outlook_desc:"Stable",education:"Bachelor's degree",exposure:5.5,exposure_rationale:"Data processing and mapping are increasingly AI-assisted. Fieldwork measurement and site visits remain physical."},
+
+// ── Science & Social Science ──
+{title:"Psychologists & Counsellors",slug:"psychologists",category:"Science & Social",pay:85330,jobs:192000,outlook:6,outlook_desc:"Stable",education:"Master's/Doctoral",exposure:4.0,exposure_rationale:"Therapeutic relationships require deep human empathy and presence. Assessment tools have some AI exposure."},
+{title:"Social Workers",slug:"social-workers",category:"Science & Social",pay:55350,jobs:708100,outlook:7,outlook_desc:"Growing",education:"Bachelor's degree",exposure:3.5,exposure_rationale:"Case management requires home visits, court appearances, and deep interpersonal work. Documentation has AI exposure."},
+{title:"Economists & Policy Analysts",slug:"economists",category:"Science & Social",pay:113940,jobs:16800,outlook:6,outlook_desc:"Stable",education:"Master's degree",exposure:7.5,exposure_rationale:"Economic modelling, data analysis, and policy writing are substantially digital. Research design provides some human edge."},
+{title:"Research Scientists (General)",slug:"research-scientists",category:"Science & Social",pay:95000,jobs:80000,outlook:5,outlook_desc:"Growing",education:"Doctoral degree",exposure:5.5,exposure_rationale:"Literature review and data analysis are AI-exposed. Experimental design and lab work retain significant human need."},
+{title:"Substance Abuse & Rehabilitation Counsellors",slug:"rehab-counsellors",category:"Science & Social",pay:48520,jobs:351000,outlook:18,outlook_desc:"Strong growth",education:"Bachelor's degree",exposure:3.0,exposure_rationale:"Recovery counselling depends on human empathy, trust, and group facilitation."},
+
+// ── Maintenance & Repair ──
+{title:"Motor Mechanics & Auto Electricians",slug:"motor-mechanics",category:"Maintenance & Repair",pay:46880,jobs:725700,outlook:-1,outlook_desc:"Flat",education:"Trade certificate",exposure:2.5,exposure_rationale:"Hands-on diagnostic and repair work. AI-assisted diagnostics help but cannot replace physical skills."},
+{title:"HVAC & Refrigeration Technicians",slug:"hvac",category:"Maintenance & Repair",pay:51390,jobs:407900,outlook:6,outlook_desc:"Stable",education:"Trade certificate",exposure:2.0,exposure_rationale:"Installation and repair of climate systems requires physical presence and troubleshooting."},
+{title:"Industrial Machinery Mechanics",slug:"machinery-mechanics",category:"Maintenance & Repair",pay:57700,jobs:505000,outlook:14,outlook_desc:"Strong growth",education:"Trade certificate",exposure:2.5,exposure_rationale:"Maintaining complex machinery requires hands-on skill. Predictive maintenance uses AI but does not replace mechanics."},
+
+// ── Agriculture ──
+{title:"Farm Workers & Stockhands",slug:"farm-workers",category:"Agriculture",pay:31240,jobs:826700,outlook:0,outlook_desc:"Flat",education:"No formal requirement",exposure:1.0,exposure_rationale:"Physical outdoor labour in variable conditions. Precision agriculture uses AI tangentially but fieldwork remains manual."},
+{title:"Farm Managers",slug:"farm-managers",category:"Agriculture",pay:65000,jobs:90000,outlook:1,outlook_desc:"Flat",education:"Diploma/degree",exposure:3.5,exposure_rationale:"Operational planning and market analysis have AI exposure. On-the-ground management of land, livestock, and staff remains physical."},
+{title:"Fishing & Aquaculture Workers",slug:"fishing-workers",category:"Agriculture",pay:33040,jobs:36100,outlook:-3,outlook_desc:"Declining",education:"No formal requirement",exposure:0.5,exposure_rationale:"Among the most physical and environment-dependent occupations. AI has virtually zero application."}
+];
+
+var cScale=d3.scaleLinear().domain([0,2,5,7,10]).range(["#2d8a4e","#5cb85c","#f0ad4e","#e8733a","#c9302c"]).clamp(true);
+function fmt(n){return n!=null?n.toLocaleString():"N/A"}
+function getLabel(s){if(s>=8)return"\u{1F6A8} Very High Exposure";if(s>=6)return"\u{26A0}\u{FE0F} High Exposure";if(s>=4)return"\u{1F7E1} Moderate Exposure";if(s>=2)return"\u{1F7E2} Low Exposure";return"\u{2705} Minimal Exposure"}
+
+document.getElementById("occCount").textContent=DATA.length;
+
+// Stats
+var tiers=[
+  {label:"Very High (8\u201310)",f:function(d){return d.exposure>=8},color:"#c9302c"},
+  {label:"High (6\u20137.9)",f:function(d){return d.exposure>=6&&d.exposure<8},color:"#e8733a"},
+  {label:"Moderate (4\u20135.9)",f:function(d){return d.exposure>=4&&d.exposure<6},color:"#f0ad4e"},
+  {label:"Lower Risk (0\u20133.9)",f:function(d){return d.exposure<4},color:"#2d8a4e"}
+];
+var avgExp=(DATA.reduce(function(s,d){return s+d.exposure},0)/DATA.length).toFixed(1);
+var sH='<div><div class="snum" style="font-size:34px;color:#00B8D4">'+avgExp+'</div><div class="slabel">Average AI exposure<br>across all occupations</div></div>';
+tiers.forEach(function(t){var m=DATA.filter(t.f);sH+='<div><div class="snum" style="font-size:26px;color:'+t.color+'">'+m.length+'</div><div class="slabel">'+t.label+'</div></div>'});
+document.getElementById("statsGrid").innerHTML=sH;
+
+// Search
+var sI=document.getElementById("searchInput"),sB=document.getElementById("searchBox"),dd=document.getElementById("dropdown"),rs=document.getElementById("resultSection");
+sI.addEventListener("input",function(){
+  var t=sI.value.toLowerCase().trim();sB.classList.toggle("active",t.length>0);
+  if(!t){dd.classList.remove("open");dd.innerHTML="";return}
+  var m=DATA.filter(function(d){return d.title.toLowerCase().indexOf(t)!==-1||d.category.toLowerCase().indexOf(t)!==-1}).sort(function(a,b){return b.exposure-a.exposure}).slice(0,12);
+  if(!m.length){dd.classList.remove("open");dd.innerHTML="";return}
+  dd.innerHTML=m.map(function(d){return'<button class="dropdown-item" data-slug="'+d.slug+'"><div><div class="name">'+d.title+'</div><div class="cat">'+d.category+'</div></div><div class="score" style="color:'+cScale(d.exposure)+'">'+d.exposure.toFixed(1)+'<div class="dot" style="background:'+cScale(d.exposure)+'"></div></div></button>'}).join("");
+  dd.classList.add("open");
+  dd.querySelectorAll(".dropdown-item").forEach(function(b){b.addEventListener("click",function(){var o=DATA.find(function(d){return d.slug===b.dataset.slug});if(o)showResult(o)})});
+});
+sI.addEventListener("focus",function(){if(sI.value.trim())sI.dispatchEvent(new Event("input"))});
+document.addEventListener("click",function(e){if(!e.target.closest(".search-wrap"))dd.classList.remove("open")});
+
+function showResult(d){
+  dd.classList.remove("open");
+  document.getElementById("rTitle").textContent=d.title;
+  document.getElementById("rCat").textContent=d.category;
+  var sc=document.getElementById("rScore");sc.textContent=d.exposure.toFixed(1);sc.style.color=cScale(d.exposure);
+  var bar=document.getElementById("rBar");bar.style.width="0%";setTimeout(function(){bar.style.width=d.exposure*10+"%";bar.style.background="linear-gradient(90deg,#2d8a4e,"+cScale(d.exposure)+")"}, 50);
+  var lv=document.getElementById("rLevel");lv.textContent=getLabel(d.exposure);lv.style.color=cScale(d.exposure);
+  document.getElementById("rOutlook").textContent=d.outlook_desc+(d.outlook!=null?" ("+(d.outlook>0?"+":"")+d.outlook+"%)":"");
+  document.getElementById("rEdu").textContent=d.education;
+  document.getElementById("rJobs").textContent=fmt(d.jobs)+" workers";
+  document.getElementById("rRationale").textContent=d.exposure_rationale;
+  rs.classList.add("visible");rs.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+document.getElementById("btnSearchAnother").addEventListener("click",function(){rs.classList.remove("visible");sI.value="";sI.focus();window.scrollTo({top:0,behavior:"smooth"})});
+document.getElementById("btnExploreMap").addEventListener("click",function(){document.getElementById("mapSection").scrollIntoView({behavior:"smooth"})});
+
+// Treemap
+var aC=null,cats=Array.from(new Set(DATA.map(function(d){return d.category}))).sort();
+var pE=document.getElementById("mapPills"),ttE=document.getElementById("tt"),mC=document.getElementById("mapContainer");
+var aP=document.createElement("button");aP.className="pill active";aP.textContent="All";
+aP.addEventListener("click",function(){aC=null;pE.querySelectorAll(".pill").forEach(function(p){p.classList.remove("active")});aP.classList.add("active");rT()});
+pE.appendChild(aP);
+cats.forEach(function(c){var p=document.createElement("button");p.className="pill";p.textContent=c;p.addEventListener("click",function(){if(aC===c){aC=null;pE.querySelectorAll(".pill").forEach(function(b){b.classList.remove("active")});aP.classList.add("active")}else{aC=c;pE.querySelectorAll(".pill").forEach(function(b){b.classList.remove("active")});p.classList.add("active")}rT()});pE.appendChild(p)});
+
+function rT(){
+  var w=Math.min(mC.clientWidth,1100)||1000,h=Math.max(420,Math.min(w*.6,620));
+  var dt=aC?DATA.filter(function(d){return d.category===aC}):DATA;
+  var gr=d3.group(dt,function(d){return d.category});
+  var hi={name:"root",children:Array.from(gr,function(e){return{name:e[0],children:e[1].map(function(v){return Object.assign({name:v.title,value:v.jobs||1},v)})}})};
+  var root=d3.hierarchy(hi).sum(function(d){return d.value||0}).sort(function(a,b){return b.value-a.value});
+  d3.treemap().size([w,h]).paddingOuter(3).paddingTop(20).paddingInner(1.5).round(true)(root);
+  var svg=d3.select("#treemap-svg").attr("width",w).attr("height",h);svg.selectAll("*").remove();
+
+  (root.children||[]).forEach(function(g){
+    var grp=svg.append("g");
+    grp.append("rect").attr("x",g.x0).attr("y",g.y0).attr("width",g.x1-g.x0).attr("height",g.y1-g.y0).attr("fill","#1A2332").attr("rx",4).attr("opacity",.95);
+    var mc=Math.floor((g.x1-g.x0)/7);var lb=g.data.name.length>mc?g.data.name.slice(0,mc)+"...":g.data.name;
+    grp.append("text").attr("x",g.x0+6).attr("y",g.y0+14).attr("font-size",10).attr("font-weight",600).attr("fill","rgba(255,255,255,.55)").attr("font-family","Montserrat,Arial,sans-serif").style("pointer-events","none").text(lb);
+  });
+
+  root.leaves().forEach(function(l){
+    var lw=l.x1-l.x0,lh=l.y1-l.y0,d=l.data,col=cScale(d.exposure);
+    var t=svg.append("g").style("cursor","pointer");
+    var r=t.append("rect").attr("x",l.x0).attr("y",l.y0).attr("width",lw).attr("height",lh).attr("fill",col).attr("stroke","rgba(0,0,0,.15)").attr("stroke-width",.5).attr("rx",2).attr("opacity",.9);
+    if(lw>50&&lh>18){var mc2=Math.floor(lw/6.5);var t2=d.title.length>mc2?d.title.slice(0,mc2)+"...":d.title;t.append("text").attr("x",l.x0+4).attr("y",l.y0+13).attr("font-size",lw>100?10:8).attr("font-weight",600).attr("fill","#fff").attr("font-family","Montserrat,Arial,sans-serif").style("pointer-events","none").style("text-shadow","0 1px 3px rgba(0,0,0,.6)").text(t2)}
+    if(lw>35&&lh>30){t.append("text").attr("x",l.x0+4).attr("y",l.y0+(lw>50&&lh>18?24:14)).attr("font-size",7.5).attr("fill","rgba(255,255,255,.65)").attr("font-family","Inter,sans-serif").style("pointer-events","none").style("text-shadow","0 1px 2px rgba(0,0,0,.4)").text(d.exposure.toFixed(1)+" / 10")}
+    t.on("mouseenter",function(e){r.attr("opacity",1).attr("stroke","#fff").attr("stroke-width",2);var cr=mC.getBoundingClientRect();var tx=e.clientX-cr.left+14,ty=e.clientY-cr.top;if(tx+320>w)tx=e.clientX-cr.left-320;if(ty>h/2)ty-=180;else ty+=14;ttE.style.left=tx+"px";ttE.style.top=ty+"px";ttE.innerHTML='<div class="tt-title">'+d.title+'</div><div class="tt-cat">'+d.category+'</div><div class="tt-grid"><span class="tl">Employment:</span><span class="tv">'+fmt(d.jobs)+'</span><span class="tl">Outlook:</span><span class="tv">'+d.outlook_desc+'</span><span class="tl">AI Exposure:</span><span class="tv" style="color:'+col+'">'+d.exposure.toFixed(1)+' / 10</span></div><div class="tt-rat">'+d.exposure_rationale+'</div>';ttE.classList.add("open")});
+    t.on("mousemove",function(e){var cr=mC.getBoundingClientRect();var tx=e.clientX-cr.left+14,ty=e.clientY-cr.top;if(tx+320>w)tx=e.clientX-cr.left-320;if(ty>h/2)ty-=180;else ty+=14;ttE.style.left=tx+"px";ttE.style.top=ty+"px"});
+    t.on("mouseleave",function(){r.attr("opacity",.9).attr("stroke","rgba(0,0,0,.15)").attr("stroke-width",.5);ttE.classList.remove("open")});
+    t.on("click",function(){showResult(d);window.scrollTo({top:0,behavior:"smooth"})});
+  });
+}
+rT();
+var rt;window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(rT,200)});
+})();
+</script>
+</body>
+</html>
